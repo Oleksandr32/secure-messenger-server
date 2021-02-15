@@ -1,3 +1,5 @@
+import database.Database
+import di.appModule
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.http.cio.websocket.*
@@ -6,12 +8,15 @@ import io.ktor.sessions.*
 import io.ktor.util.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.channels.*
+import org.koin.ktor.ext.*
+import org.koin.ktor.ext.inject
 import java.time.*
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
 fun Application.module() {
     SecureMessengerApplication().apply {
+        Database.init()
         install(DefaultHeaders)
         install(CallLogging)
         install(WebSockets) {
@@ -19,6 +24,9 @@ fun Application.module() {
         }
         install(Sessions) {
             cookie<SecureMessengerSession>("SESSION")
+        }
+        install(Koin) {
+            modules(appModule)
         }
 
         main()
@@ -28,9 +36,10 @@ fun Application.module() {
 data class SecureMessengerSession(val id: String)
 
 class SecureMessengerApplication {
-    private val server = SecureMessengerServer()
 
     fun Application.main() {
+        val server by inject<SecureMessengerServer>()
+
         intercept(ApplicationCallPipeline.Features) {
             call.setSessionIfNotExist(SecureMessengerSession(generateNonce()))
         }
@@ -43,23 +52,16 @@ class SecureMessengerApplication {
                     return@webSocket
                 }
 
-                server.memberJoin(session.id, this)
+                server.memberJoin(session, this)
 
                 try {
-                    incoming.consumeEach { frame ->
-                        if (frame is Frame.Text) {
-                            receivedMessage(session.id, frame.readText())
-                        }
+                    incoming.consumeEach {
+                        server.onMessageReceived(session, it)
                     }
                 } finally {
-                    server.memberLeft(session.id, this)
+                    server.memberLeft(session, this)
                 }
             }
         }
-    }
-
-    private suspend fun receivedMessage(id: String, message: String) {
-        server.message(id, message)
-        println("receivedMessage: $message")
     }
 }
