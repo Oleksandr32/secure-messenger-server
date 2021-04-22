@@ -2,5 +2,8 @@ package models
 
 enum class Channel {
     UNKNOWN,
-    CHATS
+    AUTH,
+    USERS,
+    CHATS,
+    CHAT
 }

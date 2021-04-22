@@ -1,8 +1,9 @@
 package models
 
 data class Message(
-    val id: Int,
+    val id: Int? = null,
+    val chatId: Int,
     val body: String,
     val date: String,
-    val userId: Int
+    var isMine: Boolean
 )

@@ -1,8 +1,8 @@
 package models
 
 data class Subscribe(
-    val userId: Int,
+    var userId: Int = 0,
     val channel: Channel,
     val action: String,
-    val data: Any?
+    val data: Data?
 )

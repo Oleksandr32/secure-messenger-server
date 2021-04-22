@@ -1,8 +1,10 @@
 package models
 
 data class User(
-    val id: Int,
-    val firstName: String,
-    val lastName: String,
-    val userName: String
+    var id: Int? = null,
+    var firstName: String? = null,
+    var lastName: String? = null,
+    var userName: String? = null,
+    var password: String? = null,
+    var publicKey: String? = null
 )
