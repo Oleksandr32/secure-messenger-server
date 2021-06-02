@@ -10,8 +10,6 @@ import io.ktor.websocket.*
 import kotlinx.coroutines.channels.*
 import org.koin.ktor.ext.*
 import org.koin.ktor.ext.inject
-import server.SecureMessengerServer
-import server.SecureMessengerSession
 import java.time.*
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
@@ -35,15 +33,15 @@ fun Application.module() {
     }
 }
 
+data class SecureMessengerSession(val id: String)
+
 class SecureMessengerApplication {
 
     fun Application.main() {
         val server by inject<SecureMessengerServer>()
 
         intercept(ApplicationCallPipeline.Features) {
-            if (call.sessions.get<SecureMessengerSession>() == null) {
-                call.sessions.set(SecureMessengerSession(generateNonce()))
-            }
+            call.setSessionIfNotExist(SecureMessengerSession(generateNonce()))
         }
 
         routing {
@@ -57,9 +55,11 @@ class SecureMessengerApplication {
                 server.memberJoin(session, this)
 
                 try {
-                    incoming.consumeEach { server.onMessageReceived(session, it) }
+                    incoming.consumeEach {
+                        server.onMessageReceived(session, it)
+                    }
                 } finally {
-                    server.memberLeft(session)
+                    server.memberLeft(session, this)
                 }
             }
         }

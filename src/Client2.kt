@@ -1,4 +1,3 @@
-import com.google.gson.Gson
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.features.websocket.*
@@ -7,25 +6,22 @@ import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.runBlocking
 
 object Client2 {
-    private val gson = Gson()
-    data class Subscribe(
-        val userId: Int,
-        val channel: String,
-        val action: String,
-        val data: Any?
-    )
     @JvmStatic
     fun main(args: Array<String>) {
         runBlocking {
             val client = HttpClient(CIO).config { install(WebSockets) }
 
             client.ws(
-                host = "192.168.6.106",
+                host = "0.0.0.0",
                 port = 8080, path = "/ws"
             ) {
+                // this: DefaultClientWebSocketSession
 
-                val subscribe = Subscribe(2, "chats", "create", 0)
-                send(gson.toJson(subscribe))
+                // Send text frame.
+                send("Hello, I'am client 2")
+
+                // Send text frame.
+                send(Frame.Text("Hello World 2"))
 
                 incoming.consumeEach { frame ->
                     if (frame is Frame.Text) {
