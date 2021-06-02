@@ -38,6 +38,9 @@ dependencies {
     implementation "io.ktor:ktor-websockets:$ktor_version"
     implementation "io.ktor:ktor-gson:$ktor_version"
 
+    // RxJava
+    implementation "io.reactivex.rxjava3:rxjava:3.0.11"
+
     // Koin
     implementation "org.koin:koin-ktor:$koin_version"
 
